@@ -402,7 +402,50 @@ Basically, in the code above we have a form with 2 text-fields and a button. Whe
 
 ## Reactive forms
 
-* 
+
+
+```html
+<!--app.component.html-->
+<form [formGroup]="profileForm" (ngSubmit)="onReactiveFormSubmit()">
+     <div class="row">
+         <mat-form-field class="col-md-6">
+             <mat-label>First name</mat-label>
+             <input matInput formControlName="firstNameControl">
+             <mat-error *ngIf="profileForm.touched && firstNameControl.invalid">First name invalid</mat-error>
+         </mat-form-field>
+         <mat-form-field class="col-md-6">
+             <mat-label>E-mail</mat-label>
+             <input matInput formControlName="emailControl">
+             <mat-hint>Errors appear instantly!</mat-hint>
+         </mat-form-field>
+     </div>
+     <div class="row p-3">
+         <button mat-raised-button color="primary" class="float-right" type="submit">Submit form</button>
+     </div>
+     <div class="row">
+         <div class="alert alert-danger col-md-12" *ngIf="emailControl.invalid">E-mail invalid</div>
+     </div>
+</form>
+```
+
+```typescript
+//app.component.ts
+export class AppComponent {
+  firstNameControl= new FormControl('',[Validators.required,Validators.minLength(4)]);
+  emailControl= new FormControl('',[Validators.required,Validators.minLength(4), Validators.email]);
+  profileForm = new FormGroup({
+    firstNameControl: this.firstNameControl,
+    emailControl:this.emailControl
+  });
+
+  onReactiveFormSubmit(){
+    console.log('Reactive form values:', this.profileForm.value);
+    this.profileForm.markAllAsTouched();
+  }
+}
+```
+
+As you may notice in the code above, Reactive Forms do not change the variables directly. Instead, the content comes from a [FormGroup](https://angular.io/api/forms/FormGroup) and [FormControl](https://angular.io/api/forms/FormControl). Using these controls, we can define initial values, add multiple validators, and check if the control has valid/invalid content from html. This approach is quite useful when you have lots of inputs and complex validations.
 
 # Services
 
@@ -438,220 +481,302 @@ export class AppComponent implements OnInit {
 }
 ```
 
-
+The `EmployeesService` above can be used by any component/service. All you need is to "inject" it into the constructor of your component like `private employeesService:EmployeesService`. After doing this, you can access any function/property defined in the service. 
 
 # Pipes
 
-* ddkdh
+[Pipes](https://angular.io/guide/pipes) allow to transform data before rendering into the DOM. It's commonly used to transform date formats, amounts, and any other number or string that requires to be formatted and/or modified prior to display into the browser. The POC contains a small sample demonstrating how pipes are created and used. In the example below, we have a pipe called `fileSize` that displays the file size in megabytes: 
+
+```typescript
+//file-size.pipe.ts
+@Pipe({name: 'fileSize'})
+export class FileSizePipe implements PipeTransform {
+
+  transform(size: number, extension: string = 'MB'): string {
+    return (size / (1024 * 1024)).toFixed(2) + extension;
+  }
+}
+```
+
+```html
+<!--app.component.html -->
+<div>
+    <p>File: {{ file.name }}</p>
+    <p>File size: {{ file.size | fileSize }}</p>
+</div>
+```
+
+```typescript
+//app.component.ts
+export class AppComponent {
+  file = { name: 'logo.svg', size: 2120109, type: 'image/svg' };
+}
+```
 
 # Directives
 
-* dkdhd
+Angular Directives are used to extend the power of HTML by giving it new syntax. 
 
 ## Attribute Directives
 
-* sddd
-* Mais info [aqui](https://angular.io/guide/attribute-directives)
+"[Attribute Directives](https://angular.io/guide/attribute-directives) changes the appearance or behavior of a DOM element.". For instance, we can create a directive to highlight a text, to change it's color, to resize the content, reposition, and so on. Whatever modification needed to display the element in the browser. 
+
+The POC contains a sample, which is similar to the code below. It demonstrates a directive used to underline the text of a DOM element:
+
+```typescript
+//underline.directive.ts
+@Directive({selector: '[appUnderline]'})
+export class UnderlineDirective {
+
+  constructor(el: ElementRef) {
+    el.nativeElement.style.textDecoration = 'underline';
+  }
+}
+```
+
+Here's how you can use the directive created above: 
+
+```html
+<!--app.component.html -->
+<p appUnderline>Underline me!</p>
+```
 
 ## Structural Directives
 
-* 
+"[Angular Structural Directives](https://angular.io/guide/structural-directives) are responsible for HTML layout. They shape or reshape the DOM's *structure*, typically by adding, removing, or manipulating elements.". Every structural directive begins with an `*`. Angular itself provides several structural directives. Ex: `*ngIf, *ngFor, *ngSwitchcase`...  Different from attribute directive, which acts over one single element, the structural directives adds/removes and change other elements in the DOM. They tend to be more complex to create but are more powerful. 
+
+Follow below a sample that does the opposite of `*ngIf`. If the content is displayed unless the condition is set to true:
+
+```typescript
+//display-undless.directive.ts
+@Directive({selector: '[displayUnless]'})
+export class DisplayUnlessDirective {
+    private hasView = false;
+
+    constructor(private templateRef: TemplateRef<any>,private viewContainer: ViewContainerRef) {
+    }
+
+    @Input() set displayUnless(condition: boolean) {
+        if (!condition && !this.hasView) {//display only if condition==false
+            this.viewContainer.createEmbeddedView(this.templateRef);
+            this.hasView = true;
+        } else if (condition && this.hasView) {
+            this.viewContainer.clear();
+            this.hasView = false;
+        }
+    }
+}
+```
+
+ ```html
+<!--app.component.html-->
+<p *displayUnless="condition">This paragraph is displayed if condition==false</p>
+<button mat-raised-button color="primary" (click)="onBtnToggleClicked()" >Toggle condition</button>
+ ```
+
+```typescript
+//app.component.ts
+export class DirectivesComponent {
+  condition=false;
+
+  onBtnToggleClicked(){
+    this.condition=!this.condition;
+  }
+}
+```
 
 # Router
 
-* Avoid using named router-outlet. Instead, prefer using several \<router-outlet> with child routes. Ex: 
+Angular provides a powerful [router](https://angular.io/guide/router) to navigate between pages. These pages are rendered inside a `<router-outlet>` element. It's possible to have multiple `<router-outlet>` elements in order to create sub-routes, and we can have [guards](https://angular.io/guide/router-tutorial-toh#milestone-5-route-guards) to prevent users from navigating to parts of an app without authorization. There's a complete sample code in the POC where you can see it working. 
 
-1. Let's suppose you have a main angular project. 
+Follow a sample below on how to create routes in your Angular application:
 
-2. There's a \<router-outlet> in the app.component.html
+```html
+<!--app.component.html -->
+<p>This text never changes</p>
+<router-outlet></router-outlet>
+<p>This also never changes</p>
+```
 
-3. Than, after the user login, you display a Home.component. 
-
-4. In this HomeComponent, you have another \<router-outlet> 
-
-5. When user clicks on a button, you want to load another module into the router-outlet inside the HomeComponent. 
-
-6. To do so, create the following routes in your main project: 
+Since `app.component.html` above is our main top level html file, views are displayed inside the `<router-outlet>` according to the route provided, but everything that is written outside the `<router-outlet>` is fixed and always displayed. This is quite useful since we can create layouts that changes only parts of the content, while keeping other elements. 
 
 ```typescript
+//app-routing.module.ts
 const routes: Routes = [
     {path: '', redirectTo: 'login', pathMatch: 'full'},
     {path: 'login', component: LoginComponent},
     {path: 'home', component: HomeComponent, children:[
         //this is a child route, because we have a <router-outlet> inside HomeComponent
-        {path: 'cadastros', loadChildren: () => 	 import('../../cadastros/src/lib/cadastros.module').then(m => m.CadastrosModule)},
+        {path: 'lazy-module', loadChildren:  async () => (await import('../src/extra-module/extra.module')).ExtraModule},
     ]
     },
-    // {path: '**', component:LoginComponent},
 ];
 ```
 
-8. Now, under Cadastros module, add the followint routes:
+The routes above indicate that when there's no route provided (ex: mydomain.com/<nothingelse> ), the `LoginComponent` will be displayed in the `<router-outlet>` element. Then, users can navigate to `/home`, when `HomeComponent` is rendered, and at last,  we have another `<router-outlet>` inside `HomeComponent`  that is used to display a child/nested route `/home/lazy-module`. The cool thing is that this route do a lazy loading of the chunk file generated by the `ExtraModule`, and more child routes can continue from there. Ex: 
+
+Under `ExtraModule`, we have the following routes:
 
 ```typescript
+//extra-routing.module.ts
 const routes: Routes = [
-    {path: '', component: CadastrosComponent, children: [//route: /cadastros
-    {path: 'clients', component: ClientsComponent,},
-    {path: 'clients/edit', component: ClientsEditComponent},//this cannot be a child route of clients, since we don't have a router-outlet inside clients
+    {path: '', component: ExtraComponent, children: [//route: /home/lazy-module 
+      {path: 'users', component: UsersComponent,},
+      {path: 'users/edit', component: UsersEditComponent},
 ]}];
 ```
 
-10. Now, you can load the Cadastros module from HomeComponent, by adding the code: 
+The code above provides all the routes starting with `/home/lazy-module`, so whatever comes later (ex: /home/lazy-module) will be handled by the routing table provided in `extra-routing.module.ts`. 
 
-```typescript
-await this.router.navigate(['home/cadastros/clientes']);
+We can navigate to routes by html or by typescript. Ex:
+
+```html
+<!--some.component.html -->
+<nav>
+  <a routerLink="/home" routerLinkActive="active">Home</a>
+</nav>
 ```
 
-12. This will do the lazy loading of the Cadastros module and display the ClientsComponent inside the router-outlet in HomeComponent.
+If user clicks on `Home` link above, the route will change to `/home` which renders the `HomeComponent`, as defined in the app-`routing.module.ts`. We could also navigate from code. Ex:
 
-# HttpClient
-
-* ddff
-
-# Angular Elements
-
-* dkdhd
+```typescript
+export class LoginComponent{
+    
+    constructor(protected router: Router) { } //Router is a service injected
+    
+  	async onBtnLoginClicked(){
+	    await this.router.navigate(['home']);
+	}
+}
+```
 
 # Internationalization
 
-* More info about translations [here](https://angular.io/guide/i18n)
-* There's also a great tool for translations called NGX-Translate. More info [here](http://www.ngx-translate.com/).
-
-# Server Side Rendering
-
-* 
-
-# PWA
-
-* 
-
-# Angular Workspace (App + one Lib)
-
-* Segue um passo a passo para criar um workspace Angular contendo um app e uma lib abaixo: 
-1. Baixar o Angular CLI [aqui](https://cli.angular.io/)
-1. Executar `ng new nomeworkspace --createApplication="false"` . Há informações sobre os parâmetros do ng new [aqui](https://angular.io/cli/new)
-1. `cd nomeworkspace`
-1. Criar um projeto para a aplicação: `ng generate application nome-app --routing=true --style=scss`
-1. Criar um projeto para a lib: `ng generate library nome-lib`
-1. Instalar os pacotes npm: `npm install`
-1. Executar a aplicação: `ng serve`
-
-* 
-
+There are several tools that provide internationalization to Angular. Angular itself has the [i18n](https://angular.io/guide/i18n), but there are others like [NGXTranslate](http://www.ngx-translate.com/), and some others provided by the community. Take a look at the POC provided to see how it works. Basically, we can run a tool to generate a json file where we can enter all the translations and these translations are loaded automatically depending on the user's browser language or manually by code (ex: when user explicitly changes the language from a comboBox). 
 
 # Tests
-* Mais informações [aqui](https://angular.io/guide/testing)
 
-* Os testes unitários são realizados através de Karma e Jasmine. 
+Angular has a great support for [BDD](https://pt.wikipedia.org/wiki/Behavior_Driven_Development) and [Unit Testing](https://en.wikipedia.org/wiki/Unit_testing). It comes with [Jasmine](https://jasmine.github.io/) and [Karma](https://karma-runner.github.io/latest/index.html) integrated in a way that, whenever you add a new component into your project, Angular automatically creates the Jasmine spec for you. 
 
-* Jasmine é o framework mais popular para testes no Angular. 
+Follow a sample where we do some testing with the Login page below: 
 
-* Karma é uma ferramenta criada pelo time de Angular para rodar testes unitários. Ele carrega o browser, lê os testes a partir de um arquivo config, executa e apresenta o resultado em um terminal. 
+```typescript
+//Login.component.ts
+export class LoginComponent {
+  email?:string;
+  password?:string;
+  errorMsg?:string;
+  @ViewChild('errorDiv') errorDiv?: HTMLDivElement; 
 
-* Protractor (opcional) é um framework de teste end-to-end. Ele executa o teste no browser da mesma maneira que um usuário executaria. Assim, ele faz o teste de UI. O Protractor se baseia no WebdriverJS e Selenium, assim, deve-se estar familiarizado com essas ferramentas para usa-lo.
+  constructor(protected router: Router, private usersService:UsersService) { }
 
-* O formato dos testes é especificado pelo [Jasmine](https://jasmine.github.io/)
-
-* Os testes de cada componente são escritos no arquivo .spec.ts. 
-
-* Para iniciar os testes, basta digitar `ng test`. Será aberto o Chrome e vai ser apresentado o resultado de todos os testes executados. O resultado também é apresentado no console. 
-
-* Ao modificar um componente e salvar, será executado o teste novamente. 
-
-* As configurações dos testes ficam em karma.conf.js e test.ts na pasta src. 
-
-* Services também podem ser testados. 
-
-* Segue um exemplo de teste unitário para a tela de login abaixo:
-
-  ```typescript
-  //Login.component.ts
-  export class LoginComponent implements OnInit {
-  
-    email?:string;
-    password?:string;
-    errorMsg?:string;
-    @ViewChild('errorDiv') errorDiv?: HTMLDivElement; //div must be like <div #errorDiv></div>
-  
-    constructor(protected router: Router, private usersService:UsersService) { }
-  
-    ngOnInit(): void {}
-  
-    async onBtnLoginClicked():Promise<void>{
-      if(!await this.authenticateUser()) return;
-      else await this.router.navigate([Defines.routeUsers]);
-    }
-  
-    async authenticateUser():Promise<boolean>{
-      this.errorMsg=undefined;
-      let ok=await this.usersService.authenticate(this.email,this.password);
-      if(ok)return true;;
-      this.errorMsg = 'Email ou senha inválidos';
-      return false;
-    }
+  async onBtnLoginClicked():Promise<void>{
+    if(!await this.authenticateUser()) return;
+    else await this.router.navigate([Defines.routeUsers]);
   }
-  ```
 
-  ```typescript
-  //login.component.spec.ts
-  describe('LoginComponent', () => {
-    let component: LoginComponent;
-    let fixture: ComponentFixture<LoginComponent>;
-  
-    beforeEach(async(() => {
-      TestBed.configureTestingModule({
-        declarations: [ LoginComponent ],
-        imports: [RouterTestingModule, HttpClientModule],
-        providers:[UsersService]
-      })
-      .compileComponents();
-    }));
-  
-    beforeEach(() => {
-      fixture = TestBed.createComponent(LoginComponent);
-      fixture.debugElement.nativeElement.style.visibility = "hidden";//use this to hide the component from karma result
-      component = fixture.componentInstance;
-      fixture.detectChanges();
-    });
-  
-    // it('Criação do componente', () => {
-    //   expect(component).toBeTruthy();
-    // });
-  
-    it('Teste com email/senha inválidos', async () => {
-      component.email=undefined;
-      component.password=undefined;
-      let result=await component.authenticateUser();
-      expect(result).toBeFalse();
-      //let's wait for dom updates and check if the error div is displayed.
-      fixture.detectChanges();
-      let errorDiv = fixture.debugElement.query(By.css('#errorDiv')); //div must be like <div id="errorDiv"></div>
-      //expect(component.errorDiv).toBeTruthy()
-      //ou
-      expect(errorDiv).toBeTruthy()
-    });
-  
-    it('Teste com email/senha válidos', async () => {
-      component.email='bruno@tezine.com';
-      component.password='tata';
-      let result=await component.authenticateUser();
-      expect(result).toBeTrue()
-    });
+  async authenticateUser():Promise<boolean>{
+    this.errorMsg=undefined;
+    let ok=await this.usersService.authenticate(this.email,this.password);
+    if(ok)return true;;
+    this.errorMsg = 'Invalid credentials';
+    return false;
+  }
+}
+```
+
+```typescript
+//login.component.spec.ts
+describe('LoginComponent', () => {
+  let component: LoginComponent;
+  let fixture: ComponentFixture<LoginComponent>;
+
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      declarations: [ LoginComponent ],
+      imports: [RouterTestingModule, HttpClientModule],
+      providers:[UsersService]
+    })
+    .compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(LoginComponent);
+    fixture.debugElement.nativeElement.style.visibility = "hidden";//use this to hide the component from karma result
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
-  ```
 
+  it('Test with invalid credentials', async () => {
+    component.email=undefined;
+    component.password=undefined;
+    let result=await component.authenticateUser();
+    expect(result).toBeFalse();
+    //let's wait for dom updates and check if the error div is displayed.
+    fixture.detectChanges();
+    let errorDiv = fixture.debugElement.query(By.css('#errorDiv')); //div must be like <div id="errorDiv"></div>
+    expect(errorDiv).toBeTruthy()
+  });
 
-
-# Deployment
-
-* dd
+  it('Test with valid credentials', async () => {
+    component.email='bruno@tezine.com';
+    component.password='tata';
+    let result=await component.authenticateUser();
+    expect(result).toBeTrue()
+  });
+});
+```
 
 
 # Open API Integration
 
-* In order to generate the REST APIs automatically for  your Angular project using [Open API Generator](https://openapi-generator.tech/), take a look at the Open API Genrator [here](../../OpenAPIGenerator.md).
+It's pretty easy to generate client REST calls as Angular Services to your Angular project if you have a swagger generated somewhere else. There's a great tool called [Open API Generator](https://openapi-generator.tech/) that generates it automatically for you, so NO MORE writing REST calls by hand! :-)   
 
-12. 
+All you have to do is follow these 2 steps below:
+
+1. install `Open API Generator` in your machine: `npm install @openapitools/openapi-generator-cli -g`
+2. execute open-api-generator in your workspace: 
+
+```bash
+openapi-generator generate -i http://localhost:5000/swagger/v1/swagger.json -g typescript-angular -o ./projects/myapp-api --additional-properties="ngVersion=10.0.0" --import-mappings=Date=java.sql.Date --type-mappings=Date=string
+```
+
+The example above generates all the REST APIs into a new Angular project called `myapp-api` and does some mapping to translate java Dates to typescript string. After executing the steps above, you have to import the `myapp-api` into your project and you're ready to make rest calls. Ex:
+
+Add the following lines into your `app.module.ts`:
+
+```typescript
+export function apiConfigFactory(): Configuration {
+  const params: ConfigurationParameters = {
+    // set configuration parameters here like Oauth, JWT, user/password...
+  }
+  return new Configuration(params);
+}
+
+@NgModule({
+  declarations: [
+    ...
+  ],
+  imports: [
+    ApiModule.forRoot(apiConfigFactory),
+    ...
+  ],
+```
+
+Now, you can make REST calls: 
+
+```typescript
+//login.component.ts
+export class LoginComponent{
+    
+    constructor(private usersService: UsersService){//UsersService was created by open-api-generator        
+    }
+    
+    onBtnLoginClicked(){
+        let userID = await this.usersService.authenticate('email','mypassword').toPromise();
+    }
+}
+```
 
 # CORS
 
@@ -680,21 +805,18 @@ Now, just add the line `proxyConfig` in your `angular.json` inside `serve` as sh
 
 That's it! Now your Angular application is ready to forward API requests to a microservice hosted at http://mydomain.com:9090
 
-# Security
-
 # Typescript properties
 
 Every Angular workspace has a `tsconfig.json` file. All typescript configurations used by the projects in the workspace are written in it. There are a few [compiler options](https://www.typescriptlang.org/docs/handbook/compiler-options.html) that are very important and are described below:
 
-1. strict: Strict is an important option that is disabled by default, but it's highly recommended to enable it. Basically, when disabled, you can write typescript as pure javascript (non typed). If you enable it, the compiler will display an error whenever you try to create a property that should never be null (without `?` at the end. Ex: `title:string` ). It'll display an error when you don't specify function parameter types, and many other options. There's a good explanation about `strict` [here](https://medium.com/webhint/going-strict-with-typescript-be3f3f7e3295).
-2. removeComments: I have no idea why, but this flag is disabled by default, so it's important to enable it in order to remove your code comments for the production build. 
+1. `strict`: Strict is an important option that is disabled by default, but it's highly recommended to enable it. Basically, when disabled, you can write typescript as pure javascript (non typed). If you enable it, the compiler will display an error whenever you try to create a property that should never be null (without `?` at the end. Ex: `title:string` ). It'll display an error when you don't specify function parameter types, and many other options. There's a good explanation about `strict` [here](https://medium.com/webhint/going-strict-with-typescript-be3f3f7e3295).
+2. `removeComments`: I have no idea why, but this flag is disabled by default, so it's important to enable it in order to remove your code comments for the production build. 
 
 # Advanced Scenarios
 
 ## Component Lazy Loading
 
-* One of the cool features that Ivy brougth to Angular in version 9, was the ability to do Lazy Loading for Angular Components. 
+One of the cool features that Ivy brought to Angular in version 9, was the ability to do Lazy Loading for Angular Components. There are several tutorials explaining on how to make it work in several ways. Check it out [here](https://indepth.dev/lazy-loading-angular-modules-with-ivy/) and [here](https://netbasal.com/welcome-to-the-ivy-league-lazy-loading-components-in-angular-v9-e76f0ee2854a). In the future, I'll add more info here. :-P 
 
-* There are several tutorials explaining on how to make it work in several ways. Check it out [here](https://indepth.dev/lazy-loading-angular-modules-with-ivy/) and [here](https://netbasal.com/welcome-to-the-ivy-league-lazy-loading-components-in-angular-v9-e76f0ee2854a). 
+Enjoy! 
 
-  
