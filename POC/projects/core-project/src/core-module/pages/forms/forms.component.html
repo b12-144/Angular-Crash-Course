@@ -1,0 +1,54 @@
+<mat-toolbar color="primary">
+    <span class="example-spacer"></span>
+    <span>Forms</span>
+</mat-toolbar>
+<mat-tab-group  animationDuration="0ms">
+    <!--TEMPLATE DRIVEN FORM BELOW-->
+    <mat-tab label="Template Driven">
+        <div class="container p-3">
+            <form  (ngSubmit)="onTemplateDrivenFormSubmit()" >
+                <div class="row">
+                    <mat-form-field class="col-md-6">
+                        <mat-label>First name</mat-label>
+                        <input matInput [(ngModel)]="firstName" id="txtFirstName" name="txtFirstName" required minlength="4">
+                    </mat-form-field>
+                    <mat-form-field class="col-md-6">
+                        <mat-label>E-mail</mat-label>
+                        <input matInput [(ngModel)]="email" id="txtEmail" name="txtEmail" required email>
+                        <mat-hint>Errors appear instantly!</mat-hint>
+                    </mat-form-field>
+                </div>
+                <div class="row p-3">
+                    <button mat-raised-button color="primary" class="float-right" type="submit">Submit form</button>
+                </div>
+            </form>
+        </div>
+    </mat-tab>
+
+
+    <!--REACTIVE FORM BELOW-->
+    <mat-tab label="Reactive">
+        <div class="container p-3">
+            <form [formGroup]="profileForm" (ngSubmit)="onReactiveFormSubmit()">
+                <div class="row">
+                    <mat-form-field class="col-md-6">
+                        <mat-label>First name</mat-label>
+                        <input matInput formControlName="firstNameControl">
+                        <mat-error *ngIf="profileForm.touched && firstNameControl.invalid">First name invalid</mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="col-md-6">
+                        <mat-label>E-mail</mat-label>
+                        <input matInput formControlName="emailControl">
+                        <mat-hint>Errors appear instantly!</mat-hint>
+                    </mat-form-field>
+                </div>
+                <div class="row p-3">
+                    <button mat-raised-button color="primary" class="float-right" type="submit">Submit form</button>
+                </div>
+                <div class="row">
+                    <div class="alert alert-danger col-md-12" *ngIf="emailControl.invalid">E-mail invalid</div>
+                </div>
+            </form>
+        </div>
+    </mat-tab>
+</mat-tab-group>

@@ -1,0 +1,21 @@
+
+
+<div class="container p-3">
+    <table class="table" *ngIf="employees">
+        <thead class="thead-dark">
+        <tr class="header">
+            <th>ID</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let user of employees;index as i;" class="line">
+            <td>{{user.id}}</td>
+            <td>{{user.employee_name}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
