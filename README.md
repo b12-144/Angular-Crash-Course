@@ -1,22 +1,25 @@
 # Angular Crash Course
 Complete tutorial + Sample Project covering most of Angular's features
 
-<!--toc generated automatically by running markdown-toc -i Angular.md-->
+<!--toc generated automatically by running markdown-toc -i README.md-->
 
 <!-- toc -->
 
-- [ANGULAR](#angular)
 - [POC](#poc)
-- [Project Structure](#project-structure)
-- [Modules](#modules)
+- [Workspace File Structure](#workspace-file-structure)
+- [Modules and Libraries](#modules-and-libraries)
+  * [Libraries](#libraries)
+    + [Lazy Loading Libraries](#lazy-loading-libraries)
+  * [Modules](#modules)
+    + [Lazy Loading Modules](#lazy-loading-modules)
 - [Components](#components)
   * [File structrure](#file-structrure)
   * [Lifecycle](#lifecycle)
   * [Input properties/parameters](#input-propertiesparameters)
   * [Output events](#output-events)
+  * [DOM events](#dom-events)
   * [ViewChild](#viewchild)
   * [ContentChild](#contentchild)
-  * [Hooks](#hooks)
   * [Animations](#animations)
 - [Forms](#forms)
   * [Template-driven forms](#template-driven-forms)
@@ -26,17 +29,14 @@ Complete tutorial + Sample Project covering most of Angular's features
 - [Directives](#directives)
   * [Attribute Directives](#attribute-directives)
   * [Structural Directives](#structural-directives)
-- [HttpClient](#httpclient)
 - [Router](#router)
-- [Angular Elements](#angular-elements)
 - [Internationalization](#internationalization)
-- [Server Side Rendering](#server-side-rendering)
-- [PWA](#pwa)
-- [Angular Workspace (App + one Lib)](#angular-workspace-app--one-lib)
 - [Tests](#tests)
-- [Deployment](#deployment)
 - [Open API Integration](#open-api-integration)
 - [CORS](#cors)
+- [Typescript properties](#typescript-properties)
+- [Advanced Scenarios](#advanced-scenarios)
+  * [Component Lazy Loading](#component-lazy-loading)
 
 <!-- tocstop -->
 
@@ -818,5 +818,4 @@ Every Angular workspace has a `tsconfig.json` file. All typescript configuration
 
 One of the cool features that Ivy brought to Angular in version 9, was the ability to do Lazy Loading for Angular Components. There are several tutorials explaining on how to make it work in several ways. Check it out [here](https://indepth.dev/lazy-loading-angular-modules-with-ivy/) and [here](https://netbasal.com/welcome-to-the-ivy-league-lazy-loading-components-in-angular-v9-e76f0ee2854a). In the future, I'll add more info here. :-P 
 
-Enjoy! 
-
+Enjoy!
