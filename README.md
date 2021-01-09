@@ -1,4 +1,4 @@
-# Angular Crash Course
+# Angular Training
 Complete tutorial + Sample Project covering most of Angular's features
 
 <!--toc generated automatically by running markdown-toc -i README.md-->
